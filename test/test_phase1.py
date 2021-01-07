@@ -1,12 +1,11 @@
-"""Unit tests for Phase 1 of the Hog project in "Composing Programs"
-   as described on
+"""Unit tests for Phase 1 of the Hog project in "Composing Programs".
+   Project is described on
    https://inst.eecs.berkeley.edu//~cs61a/fa13/proj/hog/hog.html
+   These tests also assume you write a free_bacon() function, which
+   is not explicitly stated in the assignment, but the functionality
+   is part of the assignment.
    Note that the requirements and starter code for this project
    are _not_ the same as in the version on cs61a.org.
-
-Requires:
-  The Python 'parameterized' package.  
-  Install it using 'pip install parameterized'
 
 How to run tests:
   In your hog project directory (parent of this directory), type:
@@ -21,9 +20,8 @@ Or, for more verbose output that shows all doctests being run:
 """
 
 import unittest
-from parameterized import parameterized, parameterized_class
 from hog import *
-from dice import make_fair_dice, make_test_dice
+from dice import make_test_dice
 
 class TestPhase1(unittest.TestCase):
 
