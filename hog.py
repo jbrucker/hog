@@ -4,11 +4,6 @@ from dice import six_sided, four_sided, make_test_dice
 from ucb import main, trace, interact
 from math import gcd
 
-# The rules of 'hog' on ComposingPrograms.com (cs61a/fa13) are
-# different from the runs in https://cs61a.org. 
-# Set NEWHOG to True to use rules from https://cs61a.org
-NEWHOG = False
-
 GOAL_SCORE = 100  # The goal of Hog is to score 100 points.
 
 ######################
@@ -48,7 +43,6 @@ def free_bacon(score):
     """
     assert score < GOAL_SCORE, 'The game should be over.'
     assert score >= 0, 'Negative score is not allowed.'
-    if NEWHOG: return new_free_bacon(score)
 
     max_digit = 0
     while score > 0:
