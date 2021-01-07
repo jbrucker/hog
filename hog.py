@@ -1,8 +1,7 @@
 """CS 61A Presents The Game of Hog."""
 
 from dice import six_sided, four_sided, make_test_dice
-from ucb import main, trace, interact
-from math import gcd
+from ucb import main
 
 GOAL_SCORE = 100  # The goal of Hog is to score 100 points.
 
@@ -12,8 +11,10 @@ GOAL_SCORE = 100  # The goal of Hog is to score 100 points.
 
 
 def roll_dice(num_rolls, dice=six_sided):
-    """Simulate rolling the DICE exactly NUM_ROLLS > 0 times. Return the sum of
-    the outcomes unless any of the outcomes is 1. In that case, return 1.
+    """Simulate rolling the DICE exactly NUM_ROLLS > 0 times. 
+    
+    Return the sum of the outcomes unless any of the outcomes is 1. 
+    In that case, return 1.
     Your implementation should always roll the dice *exactly* num_rolls times.
 
     num_rolls:  The number of dice rolls that will be made.
@@ -32,8 +33,7 @@ def roll_dice(num_rolls, dice=six_sided):
         got_one = got_one or value == 1
         sum_dice += value
     # stupid rule
-    return 1 if got_one else sum_dice 
-    # END PROBLEM 1
+    return 1 if got_one else sum_dice
 
 
 def free_bacon(score):
@@ -46,13 +46,14 @@ def free_bacon(score):
 
     max_digit = 0
     while score > 0:
-        max_digit = max(max_digit, score%10)
+        max_digit = max(max_digit, score % 10)
         score = score//10
     return max_digit + 1
 
 
 def take_turn(num_rolls, opponent_score, dice=six_sided):
     """Simulate a turn rolling NUM_ROLLS dice, which may be 0 (Free Bacon).
+    
     Return the points scored for the turn by the current player.
 
     num_rolls:       The number of dice rolls that will be made.
