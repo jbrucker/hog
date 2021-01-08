@@ -1,7 +1,7 @@
 """The Game of Hog."""
 
 from dice import six_sided, four_sided, make_test_dice
-from ucb import main
+from ucb import main, trace, log_current_line, interact
 
 GOAL_SCORE = 100  # The goal of Hog is to score 100 points.
 
@@ -23,7 +23,6 @@ def roll_dice(num_rolls, dice=six_sided):
     # These assert statements ensure that num_rolls is a positive integer.
     assert type(num_rolls) == int, 'num_rolls must be an integer.'
     assert num_rolls > 0, 'Must roll at least once.'
-    # BEGIN PROBLEM 1
     sum_dice = 0
     # Can't early return from the loop when a 1 is encountered,
     # so we need to keep track if any 1s.
@@ -105,7 +104,9 @@ def other(player):
 
 
 def next_player(player: int, player_score: int, opponent_score: int):
-    """Return the id of the next player who should take a turn."""
+    """Return the id of the next player who should take a turn.
+    This method is not part of the ComposingPrograms hog starter code.
+    """
     return other(player)
 
 
@@ -119,12 +120,13 @@ def play(strategy0, strategy1, goal=GOAL_SCORE, score0=0, score1=0):
 
     strategy0:  The strategy function for Player 0, who plays first.
     strategy1:  The strategy function for Player 1, who plays second.
+    goal:       The game ends and someone wins when this score is reached.
+    # These two params are in the 2020 version but not the ComposingPrograms version.
     score0:     Starting score for Player 0
     score1:     Starting score for Player 1
-    goal:       The game ends and someone wins when this score is reached.
     """
-    # Use a list so we can use same code for both players' turns.
-    # This violates a design principle to avoid parallel arrays.
+    # Use a list so we can use the same code for both players' turns.
+    # Using parallel arrays is not a good design, though.
     score = [score0, score1]
     strategy = [strategy0, strategy1]
     # the current player
@@ -137,7 +139,6 @@ def play(strategy0, strategy1, goal=GOAL_SCORE, score0=0, score1=0):
         score[player] += score_this_turn
         if swine_swap(score[player], score[opponent]):
             score = [score[1], score[0]]
-        say_scores(score[0], score[1])
         player = next_player(player, score[player], score[opponent])
     # game over.
 
@@ -145,91 +146,11 @@ def play(strategy0, strategy1, goal=GOAL_SCORE, score0=0, score1=0):
 
 
 #######################
-# Phase 2: Commentary #
+# Phase 2: Strategies #
 #######################
 
-def say_scores(score0, score1):
-    """A commentary function that announces the score for each player."""
-    print("Player 0 now has", score0, "and Player 1 now has", score1)
-    return say_scores
-
-
-def announce_lead_changes(last_leader=None):
-    """Return a commentary function that announces lead changes.
-
-    >>> f0 = announce_lead_changes()
-    >>> f1 = f0(5, 0)
-    Player 0 takes the lead by 5
-    >>> f2 = f1(5, 12)
-    Player 1 takes the lead by 7
-    >>> f3 = f2(8, 12)
-    >>> f4 = f3(8, 13)
-    >>> f5 = f4(15, 13)
-    Player 0 takes the lead by 2
-    """
-    def say(score0, score1):
-        if score0 > score1:
-            leader = 0
-        elif score1 > score0:
-            leader = 1
-        else:
-            leader = None
-        if leader != None and leader != last_leader:
-            print('Player', leader, 'takes the lead by', abs(score0 - score1))
-        return announce_lead_changes(leader)
-    return say
-
-
-def both(f, g):
-    """Return a commentary function that says what f says, then what g says.
-
-    NOTE: the following game is not possible under the rules, it's just
-    an example for the sake of the doctest
-
-    >>> h0 = both(say_scores, announce_lead_changes())
-    >>> h1 = h0(10, 0)
-    Player 0 now has 10 and Player 1 now has 0
-    Player 0 takes the lead by 10
-    >>> h2 = h1(10, 8)
-    Player 0 now has 10 and Player 1 now has 8
-    >>> h3 = h2(10, 17)
-    Player 0 now has 10 and Player 1 now has 17
-    Player 1 takes the lead by 7
-    """
-    def say(score0, score1):
-        return both(f(score0, score1), g(score0, score1))
-    return say
-
-
-def announce_highest(who, last_score=0, running_high=0):
-    """Return a commentary function that announces when WHO's score
-    increases by more than ever before in the game.
-
-    NOTE: the following game is not possible under the rules, it's just
-    an example for the sake of the doctest
-
-    >>> f0 = announce_highest(1) # Only announce Player 1 score gains
-    >>> f1 = f0(12, 0)
-    >>> f2 = f1(12, 9)
-    9 point(s)! The most yet for Player 1
-    >>> f3 = f2(20, 9)
-    >>> f4 = f3(20, 30)
-    21 point(s)! The most yet for Player 1
-    >>> f5 = f4(20, 47) # Player 1 gets 17 points; not enough for a new high
-    >>> f6 = f5(21, 47)
-    >>> f7 = f6(21, 77)
-    30 point(s)! The most yet for Player 1
-    """
-    assert who == 0 or who == 1, 'The who argument should indicate a player.'
-    # BEGIN PROBLEM 7
-    "*** YOUR CODE HERE ***"
-    # END PROBLEM 7
-
-
-#######################
-# Phase 3: Strategies #
-#######################
-
+BASELINE_NUM_ROLLS = 5
+BACON_MARGIN = 8
 
 def always_roll(n):
     """Return a strategy that always rolls N dice.
@@ -249,8 +170,8 @@ def always_roll(n):
     return strategy
 
 
-def make_averaged(original_function, trials_count=1000):
-    """Return a function that returns the average value of ORIGINAL_FUNCTION
+def make_averaged(function, num_trials=1000):
+    """Return a function that returns the average value of FUNCTION
     when called.
 
     To implement this function, you will have to use *args syntax, a new Python
@@ -262,6 +183,14 @@ def make_averaged(original_function, trials_count=1000):
     3.0
     """
     # BEGIN PROBLEM 8
+    def average(*args):
+        sum = 0.0
+        for trial in range(num_trials):
+            sum += function(*args)
+        return sum/num_trials if num_trials > 0 else 0.0
+    return average
+
+    
     "*** YOUR CODE HERE ***"
     # END PROBLEM 8
 
@@ -289,7 +218,7 @@ def winner(strategy0, strategy1):
         return 1
 
 
-def average_win_rate(strategy, baseline=always_roll(6)):
+def average_win_rate(strategy, baseline=always_roll(BASELINE_NUM_ROLLS)):
     """Return the average win rate of STRATEGY against BASELINE. Averages the
     winrate when starting the game as player 0 and as player 1.
     """
@@ -311,33 +240,40 @@ def run_experiments():
     if False:  # Change to True to test bacon_strategy
         print('bacon_strategy win rate:', average_win_rate(bacon_strategy))
 
-    if False:  # Change to True to test extra_turn_strategy
-        print('extra_turn_strategy win rate:', average_win_rate(extra_turn_strategy))
-
+    # this line is not in the 2013 starter code
     if False:  # Change to True to test final_strategy
         print('final_strategy win rate:', average_win_rate(final_strategy))
 
     "*** You may add additional experiments as you wish ***"
 
+# Strategies
 
-
-def bacon_strategy(score, opponent_score, cutoff=8, num_rolls=6):
-    """This strategy rolls 0 dice if that gives at least CUTOFF points, and
-    rolls NUM_ROLLS otherwise.
+def bacon_strategy(score, opponent_score, cutoff=BACON_MARGIN, num_rolls=BASELINE_NUM_ROLLS):
+    """This strategy rolls 0 dice if that gives at least cutoff points, 
+    and rolls num_rolls otherwise.
     """
     # BEGIN PROBLEM 10
     return 6  # Replace this statement
     # END PROBLEM 10
 
+# This function is NOT in the 2020 version.
+def swap_strategy(score, opponent_score):
+    """This strategy rolls 0 dice when it would result in a beneficial swap and
+    rolls BASELINE_NUM_ROLLS if it would result in a harmful swap. It also rolls
+    0 dice if that gives at least BACON_MARGIN points and rolls
+    BASELINE_NUM_ROLLS otherwise.
 
-def extra_turn_strategy(score, opponent_score, cutoff=8, num_rolls=6):
-    """This strategy rolls 0 dice when it triggers an extra turn. It also
-    rolls 0 dice if it gives at least CUTOFF points and does not give an extra turn.
-    Otherwise, it rolls NUM_ROLLS.
+    >>> swap_strategy(23, 60) # 23 + (1 + max(6, 0)) = 30: Beneficial swap
+    0
+    >>> swap_strategy(27, 18) # 27 + (1 + max(1, 8)) = 36: Harmful swap
+    5
+    >>> swap_strategy(50, 80) # (1 + max(8, 0)) = 9: Lots of free bacon
+    0
+    >>> swap_strategy(12, 12) # Baseline
+    5
     """
-    # BEGIN PROBLEM 11
-    return 6  # Replace this statement
-    # END PROBLEM 11
+    "*** YOUR CODE HERE ***"
+    return 5 # Replace this statement
 
 
 def final_strategy(score, opponent_score):
@@ -345,9 +281,8 @@ def final_strategy(score, opponent_score):
 
     *** YOUR DESCRIPTION HERE ***
     """
-    # BEGIN PROBLEM 12
     return 6  # Replace this statement
-    # END PROBLEM 12
+
 
 ##########################
 # Command Line Interface #
