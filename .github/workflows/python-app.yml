@@ -27,7 +27,7 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Run doctests
       run: |
-        python -m doctest -v hog.py
+        python -m doctest hog.py
     - name: Test source code with unittest
       run: |
         python -m unittest test/test_*.py
